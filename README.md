@@ -1,2 +1,0 @@
-# fitness-cycle
-Fitness app.
