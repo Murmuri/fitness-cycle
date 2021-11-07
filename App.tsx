@@ -7,9 +7,10 @@ import Exercises from './src/components/exercises';
 export default class App extends React.Component<any, any> {
     
 	state = {
-		edit: false
+		edit: false,
+		data: undefined
 	}
-	
+
 	renderButton() {
 		const { edit } = this.state;
 		let title = 'Edit';
@@ -33,8 +34,11 @@ export default class App extends React.Component<any, any> {
 		);
 	}
 
+	setData() {
+	}
+
 	render() {
-		const { edit } = this.state;
+		const { edit, data } = this.state;
 
 		return (
 			<View style={styles.container}>
@@ -44,9 +48,13 @@ export default class App extends React.Component<any, any> {
 				</View>
 				<Timer 
 					edit={ edit }
+					data={ data }
+					setData={ this.setData }
 				/>
 				<Exercises 
 					edit={ edit }
+					data={ data }
+					setData={ this.setData }
 				/>
 			</View>
 		);
@@ -62,7 +70,9 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		marginBottom: '15px',
-		marginTop: '15px'
-		
+		marginTop: '15px',
+		marginRight: '15px',
+		flexDirection: 'row-reverse',
+		width: '100%'
 	}
 });
