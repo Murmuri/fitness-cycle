@@ -4,30 +4,65 @@ import { StyleSheet, Text, View, Button} from 'react-native';
 import Timer from './src/components/timer';
 import Exercises from './src/components/exercises';
 
-export default class App extends React.Component {
-  
+export default class App extends React.Component<any, any> {
+    
+	state = {
+		edit: false
+	}
+	
+	renderButton() {
+		const { edit } = this.state;
+		let title = 'Edit';
+		let color = '#1b434d';
+		let onPress = () => {
+			this.setState({ edit: !edit });
+		}
+
+		if ( edit ) {
+			title = 'Save';
+			color = '#61d284';
+		}
+
+		return (
+			<Button 
+				onPress={ onPress } 
+				title={ title } 
+				color={ color }
+				accessibilityLabel={ title }
+			/>
+		);
+	}
+
 	render() {
+		const { edit } = this.state;
+
 		return (
 			<View style={styles.container}>
 				<StatusBar style='auto' />
-				<Button 
-					onPress={() => {}} 
-					title='Edit' 
-					color='yellow' 
-					accessibilityLabel='Edit'
+				<View style={styles.button}>
+					{ this.renderButton() }
+				</View>
+				<Timer 
+					edit={ edit }
 				/>
-				<Timer />
-				<Exercises />
+				<Exercises 
+					edit={ edit }
+				/>
 			</View>
 		);
 	}
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-	flexDirection: "column"
-  },
+	container: {
+		backgroundColor: '#fff',
+		alignItems: 'center',
+		justifyContent: 'center',
+		flexDirection: "column"
+	},
+	button: {
+		marginBottom: '15px',
+		marginTop: '15px'
+		
+	}
 });

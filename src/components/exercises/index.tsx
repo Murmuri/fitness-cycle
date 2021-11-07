@@ -1,109 +1,151 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { View, TouchableOpacity, Button, TextInput, Text  } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { VscGrabber } from 'react-icons/vsc';
 
-const exampleData: Item[] = [...Array(4)].map((d, index) => {
-    return {
-        key: `item-${index}`,
-        label: String(index)
-    };
-});
 
 type Item = {
     key: string;
-    label: string;
+    name: string;
+    count: string;
 };
 
-function Exercises({style}: any) {
-    const [data, setData] = useState(exampleData);
+export class Exercises extends React.Component<any, any>{
 
-    const renderItem = useCallback(
-        ({ item, index, drag, isActive }: RenderItemParams<Item>) => {
-            return (
-                <TouchableOpacity
+    state = {
+        data: [
+            {
+                name: '',
+                count: '1',
+                key: 'item-0'
+            }
+        ]
+    }
+
+    setData(value: string, column: 'key'|'name'|'count', index: number) {
+        const { data } = this.state;
+        data[index][column] = value;
+       
+        this.setState({ data });
+    }
+ 
+    renderItem = ({ item, index, drag, isActive }: RenderItemParams<Item>) => {
+        const { data } = this.state;
+        
+        return (
+            <TouchableOpacity
+                style={{
+                    height: 75,
+                    backgroundColor: isActive ? '#d3c2f8' : 'none',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    padding: '10px'
+                }}
+                onLongPress={ drag }
+            >
+                <VscGrabber 
                     style={{
-                        height: 75,
-                        backgroundColor: isActive ? 'blue' : 'none',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        padding: '10px'
+                        height: '25px' , 
+                        width: '25px', 
+                        marginRight: '20px'
+                    }}/>
+                <TextInput
+                    style={{
+                        width: '50%',
+                        fontSize: 20,
+                        marginRight: '10px'
                     }}
-                    onLongPress={drag}
-                >
-                    <VscGrabber style={{height: '30px' , width: '30px', marginRight: '20px'}}/>
-                    <TextInput
-                        style={{
-                            width: '50%',
-                            fontSize: 32,
-                            marginRight: '10px'
-                        }}
-                        onChangeText={() => {}}
-                        value={undefined}
-                        placeholder='Exercise name'
-                    />
-                    <Button 
-                        onPress={() => {}} 
-                        title='-' 
-                        color='deepskyblue' 
-                        accessibilityLabel='-'
-                    />
-                    <Text
-                        style={{
-                            fontSize: 30,
-                            marginRight: '15px',
-                            marginLeft: '15px'
-                        }}
-                    >
-                        {item.label}
-                    </Text>
-                    <Button 
-                        onPress={() => {}} 
-                        title='+' 
-                        color='mediumseagreen' 
-                        accessibilityLabel='+' 
-                    />
-                    <View
-                        style={{
-                            marginLeft: '15px'
-                        }}
-                    >
-                        <Button 
-                            onPress={() => {}} 
-                            title='Del' 
-                            color='red' 
-                            accessibilityLabel='del' 
-                        />
-                    </View>
-                </TouchableOpacity>
-            );
-        },
-        []  
-    );
+                    onChangeText={(text) => {
+                        this.setData(text, 'name', index as number );
+                    }}
+                    value={ item.name }
+                    placeholder='Exercise name'
+                />
+                <Button 
+                    onPress={() => {
+                        let count = Number(item.count) - 1;
 
-    return (
-        <View style={{  
-            backgroundColor: '#fff',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%'
-        }}>
-            <DraggableFlatList
-                data={data}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => `draggable-item-${item.key}`}
-                onDragEnd={({ data }) => setData(data)}
-            />
-            <Button 
-                onPress={() => {}} 
-                title='Add' 
-                color='green' 
-                accessibilityLabel='Start timer'
-            />
-        </View>
-    );
+                        if ( count < 1 ) {
+                            count = 1;
+                        }
+
+                        this.setData(String(count), 'count', index as number );
+                    }} 
+                    title='-' 
+                    color='#c4f54e' 
+                    accessibilityLabel='-'
+                />
+                <Text
+                    style={{
+                        fontSize: 20,
+                        marginRight: '15px',
+                        marginLeft: '15px'
+                    }}
+                >
+                    { item.count }
+                </Text>
+                <Button 
+                    onPress={() => {
+                        let count = Number(item.count) + 1;
+
+                        this.setData(String(count), 'count', index as number );
+                    }} 
+                    title='+' 
+                    color='#61d284' 
+                    accessibilityLabel='+' 
+                />
+            </TouchableOpacity>
+        );
+    } 
+
+    renderDraggableList() {
+        const { data } = this.state;
+        return (
+            <View style={{  
+                backgroundColor: '#fff',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%'
+            }}>
+                <DraggableFlatList
+                    key={ 'draggable-flat-list' + Math.random() }
+                    data={ data }
+                    renderItem={ this.renderItem }
+                    keyExtractor={(item, index) => `draggable-item-${item.key}`}
+                    onDragEnd={({ data }) => this.setState({ data })}
+                />
+                <View style={{ marginTop: '15px' }}>
+                    <Button 
+                        onPress={() => {
+                            data.push({
+                                name: '',
+                                count: '1',
+                                key: 'item-' + data.length
+                            })
+
+                            this.setState({ data });
+                        }} 
+                        title='Add' 
+                        color='#1b434d' 
+                        accessibilityLabel='Start timer'
+                    />
+                </View>
+            </View>
+        );
+    }
+
+    render() {
+        const { edit } = this.props;
+
+        return (
+            <View>
+                { this.renderDraggableList() }
+            </View>
+        );
+    }   
+   
 }
 
 

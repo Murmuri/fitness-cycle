@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button} from 'react-native';
 
-export default class Timer extends React.Component {
+export default class Timer extends React.Component<any, any> {
 
     public timerIsStart:boolean = false;
     public maxTime: number = 5;
@@ -108,7 +108,7 @@ export default class Timer extends React.Component {
             loop, 
             maxLoop 
         } = this.state;
-        
+        const { edit } = this.props;
         const {
             minutes,
             seconds
@@ -117,64 +117,73 @@ export default class Timer extends React.Component {
         return (
             <View style={ styles.container }>
                 <View style={ styles.item }>
-                    <Button 
-                        onPress={() => {
-                            this.setMaxTime(-1);
-                        }} 
-                        title='-' 
-                        color='deepskyblue' 
-                        accessibilityLabel='-' 
-                        disabled={ this.timerIsStart }
-                    />
+                    <View style={ edit ? {} : styles.button }>
+                        <Button 
+                            onPress={() => {
+                                this.setMaxTime(-1);
+                            }} 
+                            title='-' 
+                            color='#c4f54e' 
+                            accessibilityLabel='-' 
+                            disabled={ this.timerIsStart }
+                        />
+                    </View>
                     <Text 
                         style={ styles.text }
                     >
                         {`00:${minutes}:${seconds}`}
                     </Text>
-                    <Button 
-                        onPress={() => {
-                            this.setMaxTime(1);
-                        }} 
-                        title='+' 
-                        color='mediumseagreen' 
-                        accessibilityLabel='+' 
-                        disabled={ this.timerIsStart }
-                    />
+                    <View style={ edit ? {} : styles.button }>
+                        <Button 
+                            onPress={() => {
+                                this.setMaxTime(1);
+                            }} 
+                            title='+' 
+                            color='#61d284' 
+                            accessibilityLabel='+' 
+                            disabled={ this.timerIsStart }
+                        />
+                    </View>
                 </View>
                 <View style={styles.item}>
-                    <Button 
-                        onPress={() => {
-                            this.setMaxLoop(-1);
-                        }}
-                        title='-' 
-                        color='deepskyblue' 
-                        accessibilityLabel='-' 
-                        disabled={ this.timerIsStart }
-                    />
+                    <View style={ edit ? {} : styles.button }>
+                        <Button 
+                            onPress={() => {
+                                this.setMaxLoop(-1);
+                            }}
+                            title='-' 
+                            color='#c4f54e' 
+                            accessibilityLabel='-' 
+                            disabled={ this.timerIsStart }
+                        />
+                    </View>
                     <Text 
                         style={ styles.text }
                     >
                         {`${loop}/${maxLoop}`}
                     </Text>
-                    <Button 
-                        onPress={() => {
-                            this.setMaxLoop(1);
-                        }} 
-                        title='+' 
-                        color='mediumseagreen' 
-                        accessibilityLabel='+' 
-                        disabled={ this.timerIsStart }
-                    />
+                    <View style={ edit ? {} : styles.button }>
+                        <Button 
+                            onPress={() => {
+                                this.setMaxLoop(1);
+                            }} 
+                            title='+' 
+                            color='#61d284' 
+                            accessibilityLabel='+' 
+                            disabled={ this.timerIsStart }
+                        />
+                    </View>
                 </View>
                 <View style={ styles.item }>
-                    <View style={ styles.button }>
+                    <View style={ styles.startButton }>
                         <Button 
                             onPress={() => {
                                 this.startTimer();
                             }} 
                             title='Start' 
-                            color='#841584' 
+                            color='#61d284' 
                             accessibilityLabel='Start timer'
+                            disabled={ edit }
                         />
                     </View>
                     <Button 
@@ -183,8 +192,9 @@ export default class Timer extends React.Component {
                             this.setState({ loop: 1});
                         }} 
                         title='Reset' 
-                        color='orangered' 
+                        color='#1b434d' 
                         accessibilityLabel='Reset timer'
+                        disabled={ edit }
                     />
                 </View>
             </View>
@@ -197,18 +207,22 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: '20px'
     },
     item: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         padding: '10px'
     },
+    button: {
+        display: 'none'
+    },
     text: {
         fontSize: 30,
         marginRight: '15px',
         marginLeft: '15px'
     },
-    button: {
+    startButton: {
         marginRight: '15px'
     }
 });
