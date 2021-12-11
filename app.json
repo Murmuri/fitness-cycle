@@ -1,7 +1,9 @@
 {
   "expo": {
     "name": "fitness-cycle",
+    "description": "This is a simple fitness app",
     "slug": "fitness-cycle",
+    "owner": "murmurifish",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +22,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.terlibinoleg.fitnesscycle",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"

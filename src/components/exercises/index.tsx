@@ -1,9 +1,7 @@
-import React from 'react';
-import { View, TouchableOpacity, Button, TextInput, Text  } from 'react-native';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { VscGrabber } from 'react-icons/vsc';
-import { SwipeRow } from 'react-native-swipe-list-view'
-
+import React, { useState } from 'react';
+import { View, Button, TextInput, Text} from 'react-native';
+import IExercises from './interface';
+import * as _ from 'lodash';
 
 type Item = {
     key: string;
@@ -11,101 +9,77 @@ type Item = {
     count: string;
 };
 
-export class Exercises extends React.Component<any, any>{
-
-    state = {
-        data: [
-            {
-                name: '',
-                count: '1',
-                key: 'item-0'
-            }
-        ]
+export default function Exercises({
+    edit,
+    initData,
+    onSetData
+}:IExercises) {
+    const [data, setData] = useState(initData && initData.exercises as Item[] || []);
+    
+    const setRowData = (value: string, column: 'key'|'name'|'count', index: number) => {
+        const newData: Item[] = _.cloneDeep(data);
+        newData[index][column] = value;
+        setData(newData);
+        onSetData('exercises', newData);
     }
 
-    setData(value: string, column: 'key'|'name'|'count', index: number) {
-        const { data } = this.state;
-        data[index][column] = value;
-       
-        this.setState({ data });
-    }
- 
-    renderItem = ({ item, index, drag, isActive }: RenderItemParams<Item>) => {
-        const { data } = this.state;
-        const { edit } = this.props;
+    const renderItem = (item: Item , index: number ) => {
+        const countText = edit
+            ? item.count
+            : 'count: ' + item.count;
 
         return (
-            <SwipeRow rightOpenValue={-100}>
+            <View
+                key={ 'exercises-list' + index }
+            >
                 <View
                     style={{
                         height: 75,
-                        backgroundColor: '#d3c2f8',
-                        flexDirection: 'row-reverse',
-                        padding: '10px',
-                        width: '100%'
-                    }}
-                >
-                     <Button 
-                        onPress={() => {
-                            data.splice(index as number, 1);
-                            this.setState({ data });
-                        }} 
-                        title='Delete' 
-                        color='red' 
-                        accessibilityLabel='Delete'
-                        disabled={ !edit }
-                    />
-                </View>
-                
-                <TouchableOpacity
-                    style={{
-                        height: 75,
-                        backgroundColor: isActive ? '#d3c2f8' : 'white',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexDirection: 'row',
                         flexWrap: 'wrap',
-                        padding: '10px',
-                        width: '100%'
+                        padding: 10
                     }}
-                    onLongPress={ drag }
                 >
-                    <VscGrabber 
-                        style={{
-                            height: '25px' , 
-                            width: '25px', 
-                            marginRight: '20px'
-                        }}
-                    />
-                    <TextInput
+                    <View 
                         style={
                             edit 
-                                ? {
-                                    width: '200px',
-                                    fontSize: 20,
-                                    marginRight: '10px'
-                                }
+                                ? {} 
                                 : { display: 'none' }
                         }
-                        onChangeText={(text) => {
-                            this.setData(text, 'name', index as number );
-                        }}
-                        value={ item.name }
-                        placeholder='Exercise name'
-                    />
+                    >
+                        <TextInput
+                            style={{
+                                width: 200,
+                                fontSize: 20
+                            }}
+                            onChangeText={(text) => {
+                                setRowData(text, 'name', index as number );
+                            }}
+                            value={ item.name }
+                            placeholder='Exercise name'
+                        />
+                    </View>
                     <Text
                         style={
-                            edit 
+                            edit
                                 ? { display: 'none' }
-                                : {
-                                    width: '200px',
-                                    fontSize: 20,
-                                    marginRight: '10px'
-                                }
-                                
+                                : { width: 200, fontSize: 20, marginRight: 15 }
                         }
-                    >{ item.name }</Text>
-                    <View style={ edit ? {} : { display: "none" } }>
+                    >
+                        { item.name }
+                    </Text>     
+                    <View 
+                        style={
+                            edit 
+                                ? { 
+                                    marginLeft: 15,
+                                    marginRight: 15
+                                } 
+                                : { display: 'none' }
+                        }
+                    >
                         <Button 
                             onPress={() => {
                                 let count = Number(item.count) - 1;
@@ -114,89 +88,94 @@ export class Exercises extends React.Component<any, any>{
                                     count = 1;
                                 }
 
-                                this.setData(String(count), 'count', index as number );
+                                setRowData(String(count), 'count', index as number );
                             }} 
                             title='-' 
                             color='#c4f54e' 
                             accessibilityLabel='-'
-                        />
-                    </View>
+                        />  
+                    </View>          
                     <Text
-                        style={{
-                            fontSize: 20,
-                            marginRight: '15px',
-                            marginLeft: '15px'
-                        }}
+                        style={{ fontSize: 20 }}
                     >
-                        { item.count }
-                    </Text>
-                    <View style={ edit ? {} : { display: "none" } }>
+                        { countText }
+                    </Text>      
+                    <View 
+                        style={
+                            edit 
+                                ? { marginLeft: 15 } 
+                                : { display: 'none' }
+                        }
+                    >
                         <Button 
                             onPress={() => {
                                 let count = Number(item.count) + 1;
-
-                                this.setData(String(count), 'count', index as number );
+                                setRowData(String(count), 'count', index as number );
                             }} 
                             title='+' 
                             color='#61d284' 
                             accessibilityLabel='+' 
                         />
                     </View>
-                </TouchableOpacity>
-            </SwipeRow>
+                    <View 
+                        style={
+                            edit 
+                                ? { marginLeft: 15 } 
+                                : { display: 'none' }
+                        }
+                    >
+                        <Button 
+                            onPress={() => {
+                                const newData: Item[] = _.cloneDeep(data);
+                                newData.splice(index as number, 1);
+                                setData(newData);
+                                onSetData('exercises', newData);
+                            }} 
+                            title='Del' 
+                            color='red' 
+                            accessibilityLabel='Delete'
+                            disabled={ !edit }
+                        />
+                    </View>
+                </View>
+            </View>   
         );
+        
     } 
 
-    renderDraggableList() {
-        const { data } = this.state;
-        const { edit } = this.props;
+    return (
+        <View>
+            { 
+                data.map((item: Item, index: number) => {
+                    return (
+                        renderItem(item, index)
+                    )
+                })
+            }
+            <View 
+                style={{ 
+                    marginTop: 15,
+                    marginLeft: 30,
+                    marginRight: 30 
+                }}>
+                <Button 
+                    onPress={() => {
+                        const newData: Item[] = _.cloneDeep(data);
+      
+                        newData.push({
+                            name: 'Some',
+                            count: '1'
+                        } as Item)
 
-        return (
-            <View style={{  
-                backgroundColor: '#fff',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%'
-            }}>
-                <DraggableFlatList
-                    key={ 'draggable-flat-list' + Math.random() }
-                    data={ data }
-                    renderItem={ this.renderItem }
-                    keyExtractor={(item, index) => `draggable-item-${item.key}`}
-                    onDragEnd={({ data }) => this.setState({ data })}
+                        setData(newData);
+                        onSetData('exercises', newData);
+                    }} 
+                    title='Add' 
+                    color='#1b434d' 
+                    accessibilityLabel='Start timer'
+                    disabled={ !edit }
                 />
-                <View style={{ marginTop: '15px' }}>
-                    <Button 
-                        onPress={() => {
-                            data.push({
-                                name: '',
-                                count: '1',
-                                key: 'item-' + data.length
-                            })
-
-                            this.setState({ data });
-                        }} 
-                        title='Add' 
-                        color='#1b434d' 
-                        accessibilityLabel='Start timer'
-                        disabled={ !edit }
-                    />
-                </View>
             </View>
-        );
-    }
-
-    render() {
-        const { edit } = this.props;
-
-        return (
-            <View>
-                { this.renderDraggableList() }
-            </View>
-        );
-    }   
-   
+        </View>
+    );
 }
-
-
-export default Exercises;

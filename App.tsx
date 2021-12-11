@@ -1,64 +1,101 @@
+import React, { useState } from 'react';
+import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View, Button} from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
+import TrainingEditButton from './src/components/training-edit-button';
 import Timer from './src/components/timer';
 import Exercises from './src/components/exercises';
+//@ts-ignore
+import { vh } from 'react-native-expo-viewport-units';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default class App extends React.Component<any, any> {
-    
-	state = {
-		edit: false,
-		data: undefined
-	}
-
-	renderButton() {
-		const { edit } = this.state;
-		let title = 'Edit';
-		let color = '#1b434d';
-		let onPress = () => {
-			this.setState({ edit: !edit });
+const initData = {
+	maxTime: 60,
+	maxLoop: 4,
+	exercises: [
+		{
+			name: 'Pull ups',
+			count: '1'
+		},
+		{
+			name: 'Squats',
+			count: '1'
+		},
+		{
+			name: 'Push ups',
+			count: '1'
+		},
+		{
+			name: 'Lunges',
+			count: '1'
 		}
+	]
+};
 
-		if ( edit ) {
-			title = 'Save';
-			color = '#61d284';
+export default function App() {
+	useKeepAwake();
+  
+  	const [edit, setEdit] = useState(false);
+	const [data, setData] = useState(undefined as any);
+
+	async function saveData() {
+		await AsyncStorage.setItem('@data_app', JSON.stringify(data));
+	}
+
+	async function getStorageData() {
+		let storageData:any = await AsyncStorage.getItem('@data_app');
+		
+		if ( storageData != null  ) {
+			storageData = JSON.parse(storageData);
+		} else {
+			storageData = initData;
 		}
-
-		return (
-			<Button 
-				onPress={ onPress } 
-				title={ title } 
-				color={ color }
-				accessibilityLabel={ title }
-			/>
-		);
+		
+		setData(storageData);
 	}
 
-	setData() {
+
+	if ( !data ) {
+		getStorageData();
 	}
 
-	render() {
-		const { edit, data } = this.state;
+	return (
+		data
+			? (
+				<View style={styles.container}>
+					<StatusBar style='auto' />
+					<View style={styles.button}>
+						<TrainingEditButton 
+							onPress={() => { 
 
-		return (
-			<View style={styles.container}>
-				<StatusBar style='auto' />
-				<View style={styles.button}>
-					{ this.renderButton() }
+								if ( edit ) {
+									saveData();
+								}
+
+								setEdit(!edit); 
+							}} 
+							edit={edit}
+						/>
+					</View>
+					<View>
+						<Timer 
+							edit={edit} 
+							initData={data}
+							onSetData={(item: string, value: any) => { data[item] = value }}
+						/>
+					</View>
+					<ScrollView style={styles.exercises}>
+						<Exercises 
+							edit={edit} 
+							initData={data}
+							onSetData={(item: string, value: any) => { data[item] = value }}
+						/>
+					</ScrollView>
 				</View>
-				<Timer 
-					edit={ edit }
-					data={ data }
-					setData={ this.setData }
-				/>
-				<Exercises 
-					edit={ edit }
-					data={ data }
-					setData={ this.setData }
-				/>
-			</View>
-		);
-	}
+			)
+			: null
+		
+	);
 }
 
 const styles = StyleSheet.create({
@@ -66,13 +103,16 @@ const styles = StyleSheet.create({
 		backgroundColor: '#fff',
 		alignItems: 'center',
 		justifyContent: 'center',
-		flexDirection: "column"
+		flexDirection: 'column',
+		height: vh(100)
 	},
 	button: {
-		marginBottom: '15px',
-		marginTop: '15px',
-		marginRight: '15px',
+		marginTop: 100,
+		marginLeft: 30,
 		flexDirection: 'row-reverse',
+		width: '100%'
+	},
+	exercises: {
 		width: '100%'
 	}
 });

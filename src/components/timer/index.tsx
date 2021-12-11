@@ -1,59 +1,84 @@
-import React from 'react';
-import { StyleSheet, Text, View, Button} from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, Button} from 'react-native';
+import ITimer from './interface';
+import { Audio } from 'expo-av';
 
-export default class Timer extends React.Component<any, any> {
+export default function Timer({
+    edit,
+    initData,
+    onSetData
+}:ITimer) {
+    const initMaxTime = initData &&  initData.maxTime || 60;
+    const initMaxLoop = initData && initData.maxLoop || 4;
 
-    public timerIsStart:boolean = false;
-    public maxTime: number = 5;
+    const [sound, setSound] = React.useState();
 
-    state = {
-        timer: this.maxTime,
-        loop: 1,
-        maxLoop: 4
+    const [maxTime, setMaxTime] = useState(initMaxTime);
+    const [timer, setTimer] = useState(maxTime);
+    const [loop, setLoop] = useState(1);
+    const [maxLoop, setMaxLoop] = useState(initMaxLoop);
+    const [timerID, setTimerID] = useState(null as any);
+    let timerCount: number = timer;
+
+    function startTimer() {
+        const id = timing();
+        setTimerID(id);
     }
 
-    startTimer() {
-        this.timerIsStart = true;
-        this.timer();
+    function stopTimer() {
+        clearInterval(timerID);
+        setTimer(maxTime);
+        setTimerID(null);
     }
 
-    resetTimer() {
-        this.timerIsStart = false;
-        this.setState({ timer: this.maxTime });
+    function resetTimer() {
+        
+        clearInterval(timerID);
+        setTimer(maxTime);
+        setTimerID(null);
     }
 
-    timer = () => {
-        let { timer } = this.state;
-
-        const timerId = setInterval(() => {
-            if ( timer > 0 && this.timerIsStart ) {
-                timer -= 1;
-                this.setState({ timer });
-            } else if ( timer <= 0 && this.timerIsStart ) {
-                const { 
-                    loop,
-                    maxLoop
-                } = this.state;
-                
-                if ( loop >= maxLoop ) {
-                    this.setState({ loop: maxLoop});
-                } else {
-                    this.setState({ loop: loop + 1});
-                }
-
-                this.resetTimer();
-                clearInterval(timerId);
-            } else if ( timer <= 0 || !this.timerIsStart ){
-                this.resetTimer();
-                clearInterval(timerId);
-            }
-
+    const timing = () => {
+        
+        return setInterval(() => {
+            timerCount -= 1;
+            setTimer(timerCount);
         },1000 * 1);
     }
-    
-    timerFormatter() {
-        const { timer } = this.state;
 
+    function setMaxTiming(operand: number): void  {
+        
+        if ( (maxTime + operand) < 0 ) { 
+            setMaxTime(1);
+            setTimer(1);
+            onSetData('maxTime', 1);
+            return;
+        }
+        
+        setMaxTime(maxTime + operand);
+        setTimer(maxTime + operand);
+        onSetData('maxTime', maxTime + operand);
+    }
+
+    function setMaxLooping(operand: number): void {
+
+        if ( (maxLoop + operand) < 1 ) { 
+            setMaxLoop(1);
+            onSetData('maxLoop', 1);
+            return;
+        }
+
+        if ( (maxLoop + operand) < loop ) {
+            setMaxLoop(loop);
+            onSetData('maxLoop', loop);
+            return;
+        }
+
+        setMaxLoop(maxLoop + operand);
+        onSetData('maxLoop', maxLoop + operand);
+    }
+
+    function timerFormatter() {
         let minutes: string | number = Math.floor(timer / 60);
         let seconds: string | number = timer % 60;
 
@@ -75,131 +100,109 @@ export default class Timer extends React.Component<any, any> {
         };
     }
 
-    setMaxTime(operand: number) {
-        this.maxTime += operand;
-
-        if ( this.maxTime < 0 ) { 
-            this.maxTime = 0;
-        }
-
-        this.setState({
-            timer: this.maxTime
-        });
+    async function playSound() {
+        const { sound } = await Audio.Sound.createAsync(
+           require('../../../assets/bell.mp3')
+        );
+        setSound(sound as any);
+    
+        console.log('Playing Sound');
+        await sound.playAsync(); 
     }
 
-    setMaxLoop(operand: number) {
-        let { maxLoop, loop } = this.state;
+    const {
+        minutes,
+        seconds
+    } = timerFormatter();
 
-        maxLoop += operand;
-
-        if ( maxLoop < 1 ) { 
-            maxLoop = 1;
+    if ( timerCount <= 0 && timerID ) {
+        playSound();
+        timerCount = maxTime;
+        
+        if ( loop >= maxLoop ) {
+            setLoop(maxLoop);
+        } else {
+            setLoop(loop + 1);
         }
-
-        if ( maxLoop < loop ) {
-            maxLoop = loop;
-        }
-
-        this.setState({ maxLoop });
+      
+        stopTimer();
     }
 
-    render() {
-        const { 
-            loop, 
-            maxLoop 
-        } = this.state;
-        const { edit } = this.props;
-        const {
-            minutes,
-            seconds
-        } = this.timerFormatter();
-
-        return (
-            <View style={ styles.container }>
-                <View style={ styles.item }>
-                    <View style={ edit ? {} : styles.button }>
-                        <Button 
-                            onPress={() => {
-                                this.setMaxTime(-1);
-                            }} 
-                            title='-' 
-                            color='#c4f54e' 
-                            accessibilityLabel='-' 
-                            disabled={ this.timerIsStart }
-                        />
-                    </View>
-                    <Text 
-                        style={ styles.text }
-                    >
-                        {`00:${minutes}:${seconds}`}
-                    </Text>
-                    <View style={ edit ? {} : styles.button }>
-                        <Button 
-                            onPress={() => {
-                                this.setMaxTime(1);
-                            }} 
-                            title='+' 
-                            color='#61d284' 
-                            accessibilityLabel='+' 
-                            disabled={ this.timerIsStart }
-                        />
-                    </View>
-                </View>
-                <View style={styles.item}>
-                    <View style={ edit ? {} : styles.button }>
-                        <Button 
-                            onPress={() => {
-                                this.setMaxLoop(-1);
-                            }}
-                            title='-' 
-                            color='#c4f54e' 
-                            accessibilityLabel='-' 
-                            disabled={ this.timerIsStart }
-                        />
-                    </View>
-                    <Text 
-                        style={ styles.text }
-                    >
-                        {`${loop}/${maxLoop}`}
-                    </Text>
-                    <View style={ edit ? {} : styles.button }>
-                        <Button 
-                            onPress={() => {
-                                this.setMaxLoop(1);
-                            }} 
-                            title='+' 
-                            color='#61d284' 
-                            accessibilityLabel='+' 
-                            disabled={ this.timerIsStart }
-                        />
-                    </View>
-                </View>
-                <View style={ styles.item }>
-                    <View style={ styles.startButton }>
-                        <Button 
-                            onPress={() => {
-                                this.startTimer();
-                            }} 
-                            title='Start' 
-                            color='#61d284' 
-                            accessibilityLabel='Start timer'
-                            disabled={ edit }
-                        />
-                    </View>
+    return (
+        <View style={ styles.container }>
+            <View style={ styles.item }>
+                <View style={ edit ? {} : styles.button }>
                     <Button 
-                        onPress={() => {
-                            this.resetTimer();
-                            this.setState({ loop: 1});
-                        }} 
-                        title='Reset' 
-                        color='#1b434d' 
-                        accessibilityLabel='Reset timer'
-                        disabled={ edit }
+                        onPress={() => { setMaxTiming(-1);}} 
+                        title='-' 
+                        color='#c4f54e' 
+                        accessibilityLabel='-' 
+                        disabled={ Boolean(timerID) }
+                    />
+                </View>
+                <Text 
+                    style={ styles.text }
+                >
+                    {`00:${minutes}:${seconds}`}
+                </Text>
+                <View style={ edit ? {} : styles.button }>
+                    <Button 
+                        onPress={() => { setMaxTiming(1); }} 
+                        title='+' 
+                        color='#61d284' 
+                        accessibilityLabel='+' 
+                        disabled={ Boolean(timerID) }
                     />
                 </View>
             </View>
-        );
-    }
+            <View style={styles.item}>
+                <View style={ edit ? {} : styles.button }>
+                    <Button 
+                        onPress={() => { setMaxLooping(-1); }}
+                        title='-' 
+                        color='#c4f54e' 
+                        accessibilityLabel='-' 
+                        disabled={ Boolean(timerID) }
+                    />
+                </View>
+                <Text 
+                    style={ styles.text }
+                >
+                    {`${loop}/${maxLoop}`}
+                </Text>
+                <View style={ edit ? {} : styles.button }>
+                    <Button 
+                        onPress={() => { setMaxLooping(1); }} 
+                        title='+' 
+                        color='#61d284' 
+                        accessibilityLabel='+' 
+                        disabled={ Boolean(timerID) }
+                    />
+                </View>
+            </View>
+            <View style={ styles.item }>
+                <View style={ styles.startButton }>
+                    <Button 
+                        onPress={() => { startTimer(); }} 
+                        title='Start' 
+                        color='#61d284' 
+                        accessibilityLabel='Start timer'
+                        disabled={ edit || Boolean(timerID) }
+                    />
+                </View>
+                <Button 
+                    onPress={() => {
+                        resetTimer();
+                        setLoop(1);
+                    }} 
+                    title='Reset' 
+                    color='#1b434d' 
+                    accessibilityLabel='Reset timer'
+                    disabled={ edit }
+                />
+            </View>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -207,22 +210,22 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: '20px'
+        marginBottom: 20
     },
     item: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        padding: '10px'
+        padding: 10
     },
     button: {
         display: 'none'
     },
     text: {
         fontSize: 30,
-        marginRight: '15px',
-        marginLeft: '15px'
+        marginRight: 15,
+        marginLeft: 15
     },
     startButton: {
-        marginRight: '15px'
+        marginRight: 15
     }
 });
